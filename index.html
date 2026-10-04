@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0A2C20">
+  <title>Command palette — UI Components 07</title>
+  <!-- before the first paint: the look (?look=catalog|night|bubble, or a|b|c), so the page never flashes the wrong one.
+       Optional ?open=1 starts with the palette open, ?q=text types a query (for links and the preview scripts). -->
+  <script>
+    (() => {
+      const html = document.documentElement, q = new URLSearchParams(location.search);
+      const look = { a: 'catalog', b: 'night', c: 'bubble' }[q.get('look')] || q.get('look');
+      html.dataset.look = ['catalog', 'night', 'bubble'].includes(look) ? look : 'night';   // the default: the strongest look
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Special+Elite&family=Courier+Prime:wght@400;700&family=Baloo+2:wght@600;700;800&family=Nunito:wght@700;800&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="stage">
+    <div class="frame">                                      <!-- the 9:16 composition, scaled to fit any screen (app.js) -->
+      <div class="amb" aria-hidden="true">                   <!-- ambient life per look (app.js, from the studio clock) -->
+        <i class="lamp"></i><i class="fibre"></i>
+        <i class="dust d1"></i><i class="dust d2"></i><i class="dust d3"></i><i class="dust d4"></i><i class="dust d5"></i>
+        <i class="stars"></i><i class="beam"></i><i class="horizon"></i>
+        <i class="sun"></i><i class="bub b1"></i><i class="bub b2"></i><i class="bub b3"></i><i class="bub b4"></i><i class="bub b5"></i><i class="bub b6"></i>
+        <i class="scrim"></i>
+      </div>
+
+      <header class="title">
+        <p class="series"><span>UI Components</span><b>07</b></p>
+        <h1>Command <em>palette</em></h1>
+        <p class="hint">Press <kbd class="mod">⌘</kbd>K. Type. Fly.</p>
+      </header>
+
+      <!-- THE COMPONENT: a ⌘K command palette. One surface: a search pill that springs open into the palette. -->
+      <section class="cmd" aria-label="Command palette demo">
+        <!-- the giant word: "Jump to", then the name of the row under the cursor, then the destination -->
+        <p class="word" aria-hidden="true"><span class="w wa">Jump to</span><span class="w wb"></span></p>
+
+        <div class="pal-wrap">
+          <i class="ghost g1" aria-hidden="true"></i><i class="ghost g2" aria-hidden="true"></i>
+          <div class="pal">
+            <!-- 1 · CLOSED: the trigger. A real button; it announces itself as opening a dialog -->
+            <button class="trigger" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="palette" aria-keyshortcuts="Control+K Meta+K">
+              <svg class="t-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4"/></svg>
+              <span class="t-label">Search or jump to…</span>
+              <span class="t-keys" aria-hidden="true"><kbd class="kc mod">⌘</kbd><kbd class="kc">K</kbd></span>
+            </button>
+
+            <!-- 2 · OPEN: the dialog. Combobox input + listbox of grouped options; focus stays in the input -->
+            <div class="dialog" id="palette" role="dialog" aria-modal="true" aria-label="Command palette" inert>
+              <div class="field">
+                <svg class="f-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4"/></svg>
+                <input class="q" type="text" role="combobox" aria-expanded="false" aria-controls="results" aria-autocomplete="list" aria-haspopup="listbox"
+                       aria-label="Search or jump to" placeholder="Search or jump to…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+                <button class="close" type="button" aria-label="Close palette (Escape)">esc</button>
+              </div>
+              <div class="list">
+                <i class="spot" aria-hidden="true"></i>
+                <div class="rows" id="results" role="listbox" aria-label="Results">
+                  <i class="sel" aria-hidden="true"></i>
+                </div>
+                <div class="empty" aria-hidden="true">
+                  <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="21" cy="21" r="12"/><path d="M30 30l11 11"/><path d="M17 17.5c0-2.4 1.8-3.8 4-3.8s4 1.4 4 3.6c0 3-4 3-4 6M21 27.5v.5"/></svg>
+                  <b class="e-title">No results</b>
+                  <span class="e-sub">Try “pricing”, “mia” or “theme”.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="legend" aria-hidden="true"><span><kbd class="kc">↑</kbd><kbd class="kc">↓</kbd> move</span><span><kbd class="kc">↵</kbd> open</span><span><kbd class="kc wide">esc</kbd> close</span></p>
+        <p class="sim" aria-hidden="true">Simulated. Picking a result opens nothing.</p>
+
+        <!-- one polite announcement per change: "8 results", "No results", "Opening Pricing (simulated)" -->
+        <p class="sr-only live" role="status" aria-live="polite" aria-atomic="true"></p>
+      </section>
+
+      <!-- the impact: rings and sparks out of the pill, plus one look-specific piece (stamp, flare, pop) -->
+      <div class="fx" aria-hidden="true">
+        <i class="fx-ring"></i><i class="fx-ring"></i><i class="fx-flare"></i>
+        <span class="fx-stamp"><b>Opened</b></span><span class="fx-pop"><b>Pop!</b></span>
+        <div class="fx-sparks"></div>
+      </div>
+    </div>
+  </main>
+  <div class="touch" aria-hidden="true"></div>
+
+  <script src="spring.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

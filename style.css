@@ -1,0 +1,259 @@
+/* Command palette — a ⌘K palette that springs out of a search pill. Three looks (?look=catalog|night|bubble), each a whole
+   world with its own row, selection indicator, keycap and impact.
+
+   1 tokens: primitive → semantic (per look) → component     2 stage, frame, ambient     3 the frame's words
+   4 the surface, the pill, the dialog   5 field, rows, selection, keys   6 empty state   7 impact   8 footer
+   9 look A · catalog   10 look B · night   11 look C · bubble   12 reduced motion
+
+   ---- 1. TOKENS -------------------------------------------------------------------------------------------------
+   1a PRIMITIVES (:root): raw, hand-tuned values with no meaning — a tonal ramp per hue, three worlds.
+        catalog   --fe felt green · --cd card cream · --tx typewriter ink · --rb rubber-stamp red · --mu mustard
+        night     --nb ink blue · --ic ice (the light) · --go gold (the neon underline) · --nx accent hues
+        bubble    --pk pink · --lc lilac · --sk sky · --mn mint · --lm lemon · --gp grape (the outline ink)
+   1b SEMANTIC TOKENS (per look, on [data-look]): what a colour is FOR.
+        field   --page --field-bg --on-field --on-field-muted --chip --on-chip --em --scrim
+        panel   --panel --panel-edge --panel-shadow --panel-r --ink --ink-muted --ink-faint --rule --accent --focus --caret
+        rows    --sel --sel-edge --sel-shadow --on-sel --on-sel-muted --ic-bg-1/2/3 --ic-ink --av-1…5 --on-av --match-bg --on-match
+        keys    --key --key-edge --key-shadow --on-key --on-key-sel
+        word    --word --word-edge --word-shadow
+        trigger --trig --trig-edge --trig-shadow --on-trig --on-trig-muted
+        impact  --spark-1…4 --fx-ring --fx-ink
+        frame   --pill --pill-edge --on-pill --on-pill-muted --pill-icon --on-pill-icon --ring --lockup
+   1c COMPONENT TOKENS: each component names the semantic tokens it uses (.panel { --pn-bg … }).
+   Component rules (sections 2–8) use only component or semantic tokens (plus color-mix transparency helpers). The look
+   sections (9–11) shape parts with tokens too. */
+
+:root {
+  /* catalog: felt, card, ink */
+  --fe-950: #061D15; --fe-900: #0A2C20; --fe-800: #0F3C2C; --fe-700: #17543D; --fe-600: #1F6F50;
+  --cd-50: #FCF6E6; --cd-100: #F6EBCE; --cd-200: #EBDAAE; --cd-300: #D8C18A; --cd-400: #B39A63;
+  --tx-900: #211D14; --tx-700: #4B4231; --tx-600: #5C5240;
+  --rb-700: #9E2119; --rb-600: #B3261E; --rb-500: #CC3A2B; --mu-400: #E8B84A; --mu-300: #F2CE75; --bl-500: #5F86A8;
+  --vin-1: #86A98A; --vin-2: #D08A6B; --vin-3: #7C9CBD; --vin-4: #C9A94E; --vin-5: #A58BB4;
+  /* night: ink blue, ice light, gold neon */
+  --nb-975: #04071A; --nb-950: #070C26; --nb-900: #0B1236; --nb-850: #101A4A; --nb-700: #24379A; --nb-500: #4C69E0;
+  --ic-50: #F4F7FF; --ic-100: #E3EAFF; --ic-300: #B6C5FB; --ic-400: #94A9F2;
+  --go-300: #FFE08A; --go-400: #FFCB57; --go-500: #FFB02E;
+  --nx-1: #7DA2FF; --nx-2: #A98BFF; --nx-3: #5EEAD4; --nx-4: #FF8FAB; --nx-5: #FDBA74;
+  /* bubble: candy and grape ink */
+  --pk-100: #FFE9F6; --pk-200: #FFC7E6; --pk-300: #FFA3D5; --pk-400: #FF7DC1; --pk-500: #FF4FA8;
+  --lc-300: #D3C2FF; --lc-400: #B39BFF; --lc-500: #8F6BFF;
+  --sk-300: #A5E6FF; --mn-300: #9AF2CC; --lm-300: #FFE86F; --lm-400: #FFD21F;
+  --gp-950: #1E0B3D; --gp-900: #2A1250; --gp-800: #3B1A6E; --gp-700: #4C1D95; --gp-600: #6B3FA0;
+  --white: #fff; --black: #000;
+
+  --sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --serif: 'Instrument Serif', 'Times New Roman', serif;
+  --type: 'Special Elite', 'Courier New', monospace;
+  --cour: 'Courier Prime', 'Courier New', monospace;
+  --baloo: 'Baloo 2', 'Nunito', ui-rounded, system-ui, sans-serif;
+  --nunito: 'Nunito', ui-rounded, system-ui, sans-serif;
+  --row-h: 34px; --hd-h: 20px; --field-h: 50px;     /* app.js uses the same numbers */
+}
+
+/* 1b · semantic tokens, per look */
+/* A · CATALOG: a library card catalog. Green felt desk, a cream index card, typewriter type, a red rubber stamp */
+[data-look="catalog"] {
+  --page: var(--fe-900);
+  --field-bg: radial-gradient(ellipse 78% 52% at 50% 44%, var(--fe-600) 0%, var(--fe-800) 52%, var(--fe-950) 100%);
+  --on-field: var(--cd-100); --on-field-muted: #E4D8B6; --chip: var(--cd-100); --on-chip: var(--tx-900); --em: linear-gradient(180deg, var(--mu-300), var(--mu-400)); --scrim: color-mix(in srgb, var(--fe-950) 55%, transparent);
+  --panel: var(--cd-100); --panel-edge: var(--cd-300); --panel-shadow: 0 30px 50px -24px color-mix(in srgb, var(--black) 80%, transparent), 0 3px 0 var(--cd-400);
+  --panel-r: 7px; --ink: var(--tx-900); --ink-muted: var(--tx-600); --ink-faint: var(--tx-700); --rule: color-mix(in srgb, var(--bl-500) 55%, transparent);
+  --accent: var(--rb-600); --focus: var(--rb-600); --caret: var(--rb-600);
+  --sel: color-mix(in srgb, var(--rb-600) 7%, transparent); --sel-edge: var(--rb-600); --sel-shadow: color-mix(in srgb, var(--tx-900) 30%, transparent);
+  --on-sel: var(--tx-900); --on-sel-muted: var(--tx-600);
+  --ic-bg-1: transparent; --ic-bg-2: transparent; --ic-bg-3: transparent; --ic-ink: var(--tx-900);
+  --av-1: var(--vin-1); --av-2: var(--vin-2); --av-3: var(--vin-3); --av-4: var(--vin-4); --av-5: var(--vin-5); --on-av: var(--tx-900);
+  --match-bg: transparent; --on-match: var(--rb-600);
+  --key: var(--cd-50); --key-edge: var(--tx-900); --key-shadow: var(--tx-900); --on-key: var(--tx-900); --on-key-sel: var(--rb-600);
+  --word: var(--cd-100); --word-edge: transparent; --word-shadow: color-mix(in srgb, var(--black) 45%, transparent);
+  --trig: var(--cd-100); --trig-edge: var(--cd-300); --trig-shadow: 0 3px 0 var(--cd-400), 0 22px 30px -16px color-mix(in srgb, var(--black) 75%, transparent);
+  --on-trig: var(--tx-900); --on-trig-muted: var(--tx-600);
+  --spark-1: var(--rb-500); --spark-2: var(--cd-100); --spark-3: var(--mu-400); --spark-4: var(--cd-300); --fx-ring: var(--cd-100); --fx-ink: var(--rb-600);
+  --pill: color-mix(in srgb, var(--fe-950) 78%, transparent); --pill-edge: color-mix(in srgb, var(--cd-300) 45%, transparent);
+  --on-pill: var(--cd-100); --on-pill-muted: #E4D8B6; --pill-icon: var(--mu-400); --on-pill-icon: var(--fe-950); --ring: var(--cd-300); --lockup: none;
+}
+/* B · NIGHT: a stage at night. Ink-blue glass, a moving specular light, thin gold neon underlines */
+[data-look="night"] {
+  --page: var(--nb-950);
+  --field-bg: radial-gradient(ellipse 85% 50% at 50% 46%, var(--nb-850) 0%, var(--nb-900) 45%, var(--nb-975) 100%);
+  --on-field: var(--ic-100); --on-field-muted: var(--ic-400); --chip: var(--go-400); --on-chip: var(--nb-975); --em: linear-gradient(180deg, var(--go-300), var(--go-500)); --scrim: color-mix(in srgb, var(--nb-975) 58%, transparent);
+  --panel: linear-gradient(180deg, color-mix(in srgb, var(--nb-850) 94%, var(--nb-700)) 0%, var(--nb-900) 100%); --panel-edge: color-mix(in srgb, var(--ic-400) 38%, transparent);
+  --panel-shadow: 0 40px 70px -24px color-mix(in srgb, var(--black) 85%, transparent);
+  --panel-r: 22px; --ink: var(--ic-50); --ink-muted: var(--ic-300); --ink-faint: var(--ic-400); --rule: color-mix(in srgb, var(--ic-400) 18%, transparent);
+  --accent: var(--go-400); --focus: var(--go-400); --caret: var(--go-400);
+  --sel: linear-gradient(90deg, color-mix(in srgb, var(--ic-400) 26%, transparent), color-mix(in srgb, var(--ic-400) 7%, transparent)); --sel-edge: color-mix(in srgb, var(--go-400) 78%, transparent); --sel-shadow: transparent;
+  --on-sel: var(--white); --on-sel-muted: var(--ic-100);
+  --ic-bg-1: color-mix(in srgb, var(--nx-1) 20%, transparent); --ic-bg-2: color-mix(in srgb, var(--nx-2) 22%, transparent); --ic-bg-3: color-mix(in srgb, var(--go-400) 20%, transparent); --ic-ink: var(--ic-50);
+  --av-1: var(--nx-3); --av-2: var(--nx-4); --av-3: var(--nx-2); --av-4: var(--nx-5); --av-5: var(--nx-1); --on-av: var(--nb-975);
+  --match-bg: transparent; --on-match: var(--go-300);
+  --key: linear-gradient(180deg, color-mix(in srgb, var(--ic-300) 20%, transparent), color-mix(in srgb, var(--ic-300) 6%, transparent)); --key-edge: color-mix(in srgb, var(--ic-300) 38%, transparent); --key-shadow: transparent; --on-key: var(--ic-100); --on-key-sel: var(--white);
+  --word: var(--ic-50); --word-edge: transparent; --word-shadow: color-mix(in srgb, var(--nb-500) 70%, transparent);
+  --trig: linear-gradient(180deg, var(--nb-850), var(--nb-900)); --trig-edge: color-mix(in srgb, var(--ic-300) 48%, transparent);
+  --trig-shadow: 0 0 80px -14px color-mix(in srgb, var(--nb-500) 70%, transparent), 0 24px 36px -18px color-mix(in srgb, var(--black) 80%, transparent);
+  --on-trig: var(--ic-50); --on-trig-muted: var(--ic-300);
+  --spark-1: var(--go-300); --spark-2: var(--go-400); --spark-3: var(--ic-100); --spark-4: var(--nx-1); --fx-ring: var(--go-400); --fx-ink: var(--go-400);
+  --pill: color-mix(in srgb, var(--nb-975) 80%, transparent); --pill-edge: color-mix(in srgb, var(--ic-400) 45%, transparent);
+  --on-pill: var(--ic-100); --on-pill-muted: var(--ic-400); --pill-icon: var(--go-400); --on-pill-icon: var(--nb-975); --ring: var(--go-400); --lockup: none;
+}
+/* C · BUBBLE: bubblegum OS. Candy pink world, sticker panels in grape outline, a jelly selection pill */
+[data-look="bubble"] {
+  --page: var(--pk-400);
+  --field-bg: linear-gradient(165deg, var(--pk-300) 0%, var(--pk-400) 42%, var(--lc-400) 100%);
+  --on-field: var(--gp-950); --on-field-muted: var(--gp-950); --chip: var(--lm-300); --on-chip: var(--gp-900); --em: linear-gradient(180deg, var(--gp-700), var(--gp-700)); --scrim: color-mix(in srgb, var(--gp-800) 14%, transparent);
+  --panel: var(--pk-100); --panel-edge: var(--gp-900); --panel-shadow: 6px 7px 0 0 var(--gp-900);
+  --panel-r: 28px; --ink: var(--gp-900); --ink-muted: var(--gp-600); --ink-faint: var(--gp-600); --rule: color-mix(in srgb, var(--gp-900) 12%, transparent);
+  --accent: var(--gp-700); --focus: var(--gp-700); --caret: var(--pk-500);
+  --sel: var(--lm-300); --sel-edge: var(--gp-900); --sel-shadow: var(--gp-900);
+  --on-sel: var(--gp-900); --on-sel-muted: var(--gp-800);
+  --ic-bg-1: var(--lm-300); --ic-bg-2: var(--sk-300); --ic-bg-3: var(--mn-300); --ic-ink: var(--gp-900);
+  --av-1: var(--mn-300); --av-2: var(--pk-300); --av-3: var(--sk-300); --av-4: var(--lm-300); --av-5: var(--lc-300); --on-av: var(--gp-900);
+  --match-bg: var(--pk-300); --on-match: var(--gp-900);
+  --key: var(--white); --key-edge: var(--gp-900); --key-shadow: var(--gp-900); --on-key: var(--gp-900); --on-key-sel: var(--gp-900);
+  --word: var(--white); --word-edge: var(--gp-900); --word-shadow: var(--gp-900);
+  --trig: var(--pk-100); --trig-edge: var(--gp-900); --trig-shadow: 6px 7px 0 0 var(--gp-900);
+  --on-trig: var(--gp-900); --on-trig-muted: var(--gp-600);
+  --spark-1: var(--lm-300); --spark-2: var(--white); --spark-3: var(--sk-300); --spark-4: var(--mn-300); --fx-ring: var(--white); --fx-ink: var(--gp-900);
+  --pill: var(--pk-100); --pill-edge: var(--gp-900); --on-pill: var(--gp-900); --on-pill-muted: var(--gp-600); --pill-icon: var(--gp-900); --on-pill-icon: var(--lm-300); --ring: var(--gp-900); --lockup: brightness(0);
+}
+
+/* 1c · component tokens: each component names what it uses */
+.title   { --title-ink: var(--on-field); --title-muted: var(--on-field-muted); --title-em: var(--em); --title-chip: var(--chip); --title-on-chip: var(--on-chip); }
+.pal     { --pn-bg: var(--panel); --pn-edge: var(--panel-edge); --pn-shadow: var(--panel-shadow); --pn-ink: var(--ink); --pn-muted: var(--ink-muted); --pn-faint: var(--ink-faint);
+           --pn-rule: var(--rule); --pn-accent: var(--accent); --pn-focus: var(--focus); --pn-caret: var(--caret); }
+.trigger { --tg-bg: var(--trig); --tg-edge: var(--trig-edge); --tg-shadow: var(--trig-shadow); --tg-ink: var(--on-trig); --tg-muted: var(--on-trig-muted); --tg-focus: var(--focus); }
+.rows    { --rw-sel: var(--sel); --rw-sel-edge: var(--sel-edge); --rw-sel-shadow: var(--sel-shadow); --rw-on-sel: var(--on-sel); --rw-on-sel-muted: var(--on-sel-muted);
+           --rw-ic-1: var(--ic-bg-1); --rw-ic-2: var(--ic-bg-2); --rw-ic-3: var(--ic-bg-3); --rw-ic-ink: var(--ic-ink);
+           --rw-av-1: var(--av-1); --rw-av-2: var(--av-2); --rw-av-3: var(--av-3); --rw-av-4: var(--av-4); --rw-av-5: var(--av-5); --rw-on-av: var(--on-av);
+           --rw-match-bg: var(--match-bg); --rw-on-match: var(--on-match); }
+.kc      { --kc-bg: var(--key); --kc-edge: var(--key-edge); --kc-shadow: var(--key-shadow); --kc-ink: var(--on-key); }
+.word    { --wd-ink: var(--word); --wd-edge: var(--word-edge); --wd-shadow: var(--word-shadow); }
+.tutorial { --pill-bg: var(--pill); --pill-line: var(--pill-edge); --pill-ink: var(--on-pill); --pill-dim: var(--on-pill-muted); --pill-ic: var(--pill-icon); --pill-on-ic: var(--on-pill-icon); }
+.credits { --credit-ink: var(--on-field); --credit-muted: var(--on-field-muted); --credit-ring: var(--ring); }
+.fx      { --fx-1: var(--spark-1); --fx-2: var(--spark-2); --fx-3: var(--spark-3); --fx-4: var(--spark-4); --fx-r: var(--fx-ring); --fx-i: var(--fx-ink); }
+
+/* ---- 2. the stage, the frame, ambient ---- */
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: var(--sans); background: var(--page);
+  -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; overflow: hidden;
+}
+button, input { font: inherit; color: inherit; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.stage { position: relative; height: 100dvh; display: grid; place-items: center; overflow: hidden; background: var(--field-bg), var(--page); color: var(--on-field); }
+.frame { position: relative; width: 432px; height: 768px; flex: none; transform: scale(calc(var(--k, 1) * var(--bump, 1))); }
+.amb { position: absolute; inset: 0; pointer-events: none; }
+.amb > * { display: none; position: absolute; }
+.amb .scrim { display: block; inset: -60px; background: var(--scrim); opacity: 0; }
+
+/* ---- 3. the frame's words ---- */
+.title { position: absolute; top: 30px; left: 0; right: 0; text-align: center; z-index: 3; color: var(--title-ink); }
+.series {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin: 0 0 -4px; font-size: 11px; font-weight: 600; letter-spacing: .3em; text-transform: uppercase; color: var(--title-muted);
+}
+.series b { display: inline-grid; place-items: center; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 11px; letter-spacing: .04em; color: var(--title-on-chip); background: var(--title-chip); }
+.title h1 { margin: 0; height: 72px; font-size: 44px; font-weight: 700; line-height: 72px; letter-spacing: -.05em; white-space: nowrap; }
+.title h1 em {
+  font-family: var(--serif); font-weight: 400; font-style: italic; font-size: 1.14em; line-height: 50px; letter-spacing: -.02em; padding: 0 .1em;
+  background: var(--title-em); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hint { margin: -7px 0 0; height: 20px; line-height: 20px; font-size: 14px; font-weight: 500; color: var(--title-muted); }
+.hint .mod { font-family: inherit; }
+.hint kbd { font: inherit; font-weight: 700; color: var(--title-ink); }
+
+/* the giant word: it lives above the surface and rides with it (app.js sets its transform from the morph) */
+.cmd { position: absolute; inset: 0; z-index: 2; }
+.word { position: absolute; left: 0; right: 0; top: 110px; height: 128px; margin: 0; transform-origin: 50% 104px; text-align: center; pointer-events: none; }
+.w { position: absolute; left: 0; right: 0; top: 0; height: 128px; display: block; text-align: center; font-size: 80px; line-height: 128px; white-space: nowrap; color: var(--wd-ink); -webkit-text-stroke: 0; transform-origin: 50% 60%; }
+
+/* ---- 4. the surface: ONE element is the pill, then the palette. Its box (left, top, width, height, radius) is
+        sprung by app.js; both faces are laid out at their own fixed size inside it and clipped by it. ---- */
+.pal-wrap { position: absolute; left: 46px; top: 366px; width: 340px; height: 64px; }
+.pal { position: absolute; inset: 0; overflow: hidden; border-radius: var(--r, 32px); background: var(--pn-bg); box-shadow: inset 0 0 0 1px var(--pn-edge), var(--pn-shadow); color: var(--pn-ink); font-family: var(--f-ui); }
+.ghost { display: none; position: absolute; inset: 0; border-radius: inherit; }
+
+/* the trigger: the pill's face (a real button) */
+.trigger {
+  position: absolute; left: 50%; top: 0; width: 340px; height: 64px; margin-left: -170px; padding: 0 16px 0 20px; border: 0; border-radius: 0;
+  display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer; background: transparent; color: var(--tg-ink); font-family: var(--f-ui);
+}
+.trigger:focus-visible { outline: 3px solid var(--tg-focus); outline-offset: -6px; border-radius: 28px; }
+.t-ic { flex: none; width: 22px; height: 22px; fill: none; stroke: var(--tg-muted); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.t-label { flex: 1; min-width: 0; font-size: 17px; font-weight: 600; white-space: nowrap; color: var(--tg-ink); }
+.t-keys { flex: none; display: flex; gap: 4px; }
+
+/* the dialog: the palette's face, 392 wide, centred in the growing surface */
+.dialog { position: absolute; left: 50%; top: 0; bottom: 0; width: 392px; margin-left: -196px; opacity: 0; visibility: hidden; }
+.dialog:not([inert]) { visibility: visible; }
+.pal.is-closing .dialog { visibility: visible; }
+
+/* ---- 5. the field, the rows, the selection, the keys ---- */
+.field { position: absolute; left: 0; right: 0; top: 0; height: var(--field-h); display: flex; align-items: center; gap: 10px; padding: 0 12px 0 16px; }
+.field::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--pn-rule); }
+.field:has(.q:focus-visible)::after { height: 2px; background: var(--pn-focus); }
+.f-ic { flex: none; width: 18px; height: 18px; fill: none; stroke: var(--pn-muted); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.q { flex: 1; min-width: 0; height: 36px; padding: 0; border: 0; outline: 0; background: transparent; font-family: var(--f-ui); font-size: 17px; font-weight: 500; color: var(--pn-ink); caret-color: var(--pn-caret); -webkit-user-select: text; user-select: text; }
+.q::placeholder { color: var(--pn-muted); opacity: 1; }
+.close { flex: none; height: 24px; min-width: 38px; padding: 0 8px; border: 0; border-radius: 6px; font-family: var(--f-key); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; cursor: pointer; background: var(--kc-bg); color: var(--kc-ink); box-shadow: inset 0 0 0 1px var(--kc-edge); }
+.close:focus-visible { outline: 2px solid var(--pn-focus); outline-offset: 2px; }
+
+.list { position: absolute; left: 0; right: 0; top: var(--field-h); bottom: 0; overflow: hidden; }
+.rows { position: relative; height: 100%; }
+.ghd, .row { position: absolute; left: 8px; right: 8px; top: 0; }
+.ghd { height: var(--hd-h); display: flex; align-items: center; padding: 0 8px; font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--pn-faint); }
+.grp { display: block; }                                   /* a plain wrapper (role=group): rows position against .rows */
+.grp[hidden] { display: none; }
+.row { height: var(--row-h); display: flex; align-items: center; gap: 10px; padding: 0 8px; border-radius: 10px; cursor: pointer; color: var(--pn-ink); z-index: 1; }
+.row[hidden] { display: none; }
+.row .lb { flex: none; line-height: 24px; font-size: 14px; font-weight: 600; white-space: nowrap; }
+.row .hn { margin-left: auto; font-size: 11.5px; font-weight: 500; white-space: nowrap; color: var(--pn-muted); }
+.row .ks { flex: none; display: flex; justify-content: flex-end; gap: 3px; width: 54px; }
+.row.is-sel .lb { color: var(--rw-on-sel); } .row.is-sel .hn { color: var(--rw-on-sel-muted); }
+.row mark { background: var(--rw-match-bg); color: var(--rw-on-match); }
+.ic { flex: none; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 8px; color: var(--rw-ic-ink); }
+.ic svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ic-1 { background: var(--rw-ic-1); } .ic-2 { background: var(--rw-ic-2); } .ic-3 { background: var(--rw-ic-3); }
+.ic b { font-size: 10.5px; font-weight: 800; line-height: 16px; color: var(--rw-on-av); }
+.av-1 { background: var(--rw-av-1); } .av-2 { background: var(--rw-av-2); } .av-3 { background: var(--rw-av-3); } .av-4 { background: var(--rw-av-4); } .av-5 { background: var(--rw-av-5); }
+
+/* the selection: one element that slides between rows (app.js springs its top and bottom edges apart: a stretch) */
+.sel { position: absolute; left: 4px; right: 4px; top: 0; height: var(--row-h); transform-origin: 50% 0; border-radius: 10px; background: var(--rw-sel); box-shadow: inset 0 0 0 1px var(--rw-sel-edge); opacity: 0; z-index: 0; }
+.spot { display: none; }
+
+/* keycaps */
+.kc { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 6px; font-family: var(--f-key); font-size: 11px; font-weight: 700; line-height: 1; font-style: normal; white-space: nowrap; color: var(--kc-ink); background: var(--kc-bg); box-shadow: inset 0 0 0 1px var(--kc-edge); }
+.row.is-sel .kc { color: var(--on-key-sel); }
+
+/* ---- 6. the empty state ---- */
+.empty { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; opacity: 0; visibility: hidden; }
+.empty svg { width: 52px; height: 52px; margin-bottom: 6px; fill: none; stroke: var(--pn-accent); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.e-title { font-size: 18px; font-weight: 700; color: var(--pn-ink); }
+.e-sub { font-size: 13px; font-weight: 500; color: var(--pn-muted); }
+
+/* the destination state: the pill names where it is going, so the keycaps step aside */
+.trigger.is-dest .t-keys { display: none; }
+.trigger.is-dest .t-ic { stroke: var(--pn-accent); }
+.kc.wide { padding: 0 7px; }
+
+/* ---- the closed scene: a key legend and the "simulated" note ---- */
+.legend { position: absolute; left: 0; right: 0; top: 452px; margin: 0; display: flex; justify-content: center; gap: 18px; font-size: 12.5px; font-weight: 600; color: var(--on-field-muted); font-family: var(--f-ui); }
+.legend span { display: inline-flex; align-items: center; gap: 4px; }
+.legend .kc { min-width: 22px; }
+.sim { position: absolute; left: 0; right: 0; top: 492px; margin: 0; text-align: center; font-size: 12.5px; font-weight: 500; color: var(--on-field-muted); font-family: var(--f-ui); }
+
+/* ---- 7. the impact ---- */
+.fx { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+.fx-ring { position: absolute; left: -40px; top: -40px; width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--fx-r); opacity: 0; }
+.fx-ring + .fx-ring { border-width: 1.5px; }
+.sp { position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; opacity: 0; }
+.sp1 { background: var(--fx-1); } .sp2 { background: var(--fx-2); } .sp3 { background: var(--fx-3); } .sp4 { background: var(--fx-4); }
+.fx-flare, .fx-stamp, .fx-pop { display: none; position: absolute; left: 0; top: 0; opacity: 0; }
+
+/* ---- 12. reduced motion: no morph, no stagger, no sparks; the palette fades in (app.js jumps the geometry) ---- */
+@media (prefers-reduced-motion: reduce) {
+  .dialog, .trigger { transition: opacity .16s linear; }
+  .fx { display: none; }
+  .amb * { animation: none; }
+}
